@@ -493,7 +493,7 @@
     ...PROJECTS.map((p, i) => ({ group: "Projets", label: p.title, sub: p.kicker, color: p.color, ico: "▸", kw: p.stack.join(" ") + " " + p.summary, act: () => { go(i); openProject(i); } })),
     ...TIMELINE.map(x => ({ group: "Parcours", label: x.title, sub: orgShort(x), color: x.color, ico: x.mono, kw: x.tags.join(" ") + " " + x.lead, act: () => openRef(x.id) })),
     ...SKILLS.map((s, i) => ({ group: "Compétences", label: s.name, sub: catById[s.cat].label, color: catById[s.cat].color, ico: "◆", kw: s.how, act: () => { document.getElementById("competences").scrollIntoView({ behavior: "smooth" }); toggleCol(colEls[SKILL_CATS.findIndex(c => c.id === s.cat)], true); if (activeSkill !== i) selectSkill(i); } })),
-    { group: "Actions", label: "Télécharger le CV", sub: "PDF", color: "red", ico: "↓", act: () => window.open("Matheo_Gros_Resume.pdf", "_blank") },
+    { group: "Actions", label: "Télécharger le CV", sub: "PDF", color: "red", ico: "↓", act: () => window.open("assets/Matheo_Gros_CV.pdf", "_blank") },
     { group: "Actions", label: "Envoyer un e-mail", sub: "matheo.gros@outlook.fr", color: "blue", ico: "@", act: () => (location.href = "mailto:matheo.gros@outlook.fr") }
   ];
   const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
