@@ -1,0 +1,12 @@
+# Documents personnels (non publiés)
+CV Mathéo Gros POLYTECHNIQUE.pdf
+Présentation1.*
+~$*
+
+# Outils locaux
+.claude/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+desktop.ini
