@@ -332,7 +332,7 @@ kbd {
 .inspector__empty { color: var(--ink-3); font-size: 14px; }
 
 /* ===================== CARROUSEL ===================== */
-.carousel { position: relative; height: 430px; outline: none; touch-action: pan-y; user-select: none; }
+.carousel { position: relative; height: 430px; overflow-x: clip; outline: none; touch-action: pan-y; user-select: none; }
 .carousel__track { position: absolute; inset: 0; perspective: 1400px; }
 .pcard {
   position: absolute; left: 50%; top: 50%; width: 320px; height: 380px; margin: -190px 0 0 -160px;
