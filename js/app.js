@@ -15,6 +15,9 @@
   };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Sur téléphone, le site passe en mode « app » : une section par écran, barre d'onglets en bas
+  const mobileMQ = window.matchMedia("(max-width: 760px)");
+  const isM = () => mobileMQ.matches;
   const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
 
   const byId = {};
@@ -108,9 +111,20 @@
     const b = $(".tl__toggle", li);
     if (b) { b.setAttribute("aria-expanded", open); b.firstChild.textContent = open ? "Masquer " : "Détails "; }
   };
-  const groupEls = GROUPS.map(([type, label]) => {
+  const GROUP_COLORS = ["blue", "green", "yellow"];
+  const groupEls = GROUPS.map(([type, label], gi) => {
     const g = h("div", { class: "tl-group", data: { type } });
     g.innerHTML = `<h3 class="tl-group__title">${label}</h3><ol class="timeline"></ol>`;
+    // mobile : raccourci vers la partie suivante
+    if (gi < GROUPS.length - 1) {
+      const [nt, nl] = GROUPS[gi + 1];
+      const next = h("button", { class: "tl-next", data: { color: GROUP_COLORS[gi + 1] } },
+        `<span class="tl-next__logos">${TIMELINE.filter(x => x.type === nt).slice(0, 2).map(x => logoTile(x)).join("")}</span>
+        <span class="tl-next__txt"><small>Partie suivante</small><b>${nl}</b></span>
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`);
+      next.addEventListener("click", () => goGroup(gi + 1));
+      g.appendChild(next);
+    }
     TIMELINE.filter(x => x.type === type).forEach((x, i) => {
       const li = h("li", { class: "tl", id: "tl-" + x.id, data: { type: x.type, color: x.color }, style: `--i:${i}` });
       const hasMore = x.bullets.length > 0;
@@ -124,21 +138,24 @@
           ${hasMore ? `<div class="tl__more"><div><ul>${x.bullets.map(b => `<li>${esc(b)}</li>`).join("")}</ul></div></div>` : ""}
         </div>
         <div class="tl__aside"><span class="tl__date">${esc(x.date)}</span></div>
+        <svg class="tl__chev" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         ${hasMore || x.tags.length ? `<div class="tl__foot">
           ${hasMore ? `<button class="tl__toggle" aria-expanded="false">Détails <svg viewBox="0 0 24 24" width="14" height="14"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>` : ""}
           ${x.tags.length ? `<div class="tl__tags">${x.tags.map(t => `<span class="chip">${esc(t)}</span>`).join("")}</div>` : ""}
         </div>` : ""}`;
-      if (hasMore) {
-        li.addEventListener("click", e => {
-          if (e.target.closest("a")) return;
-          const open = !li.classList.contains("is-open");
+      li.addEventListener("click", e => {
+        // mobile : la fiche s'ouvre dans une feuille qui monte du bas
+        if (isM()) { openTlSheet(x); return; }
+        if (!hasMore || e.target.closest("a")) return;
+        const open = !li.classList.contains("is-open");
           // une seule carte ouverte à la fois : la partie reste à la hauteur de l'écran
-          if (open) $$(".tl.is-open", g).forEach(o => o !== li && setOpen(o, false));
-          setOpen(li, open);
-        });
-      } else li.style.cursor = "default";
+        if (open) $$(".tl.is-open", g).forEach(o => o !== li && setOpen(o, false));
+        setOpen(li, open);
+      });
+      if (!hasMore) li.classList.add("is-static");
       $("ol", g).appendChild(li);
     });
+    g.appendChild($(".tl-next", g) || document.createTextNode(""));
     groupsWrap.appendChild(g);
     return g;
   });
@@ -154,10 +171,15 @@
     if (k === curGroup) return;
     curGroup = k;
     filterBtns.forEach((b, j) => b.classList.toggle("is-active", j === k));
+    $$("#tlDots i").forEach((d, j) => d.classList.toggle("on", j === k));
     groupEls.forEach((g, j) => { g.classList.toggle("is-active", j === k); g.classList.toggle("is-past", j < k); });
   }
   function onPinScroll() {
-    if (pinMQ.matches) {
+    if (isM()) {
+      // mobile : les parties défilent à l'horizontale
+      const w = groupsWrap.clientWidth;
+      setGroup(w ? Math.max(0, Math.min(2, Math.round(groupsWrap.scrollLeft / w))) : Math.max(curGroup, 0));
+    } else if (pinMQ.matches) {
       const p = (scrollY - pinTop()) / pinRange();
       setGroup(Math.max(0, Math.min(2, Math.floor(p * 3))));
     } else {
@@ -168,6 +190,7 @@
   }
   const groupY = k => pinTop() + pinRange() * [0, .5, 1][k];
   function goGroup(k) {
+    if (isM()) { groupsWrap.scrollTo({ left: k * groupsWrap.clientWidth, behavior: reduced ? "auto" : "smooth" }); return; }
     const top = pinMQ.matches ? groupY(k) : groupEls[k].getBoundingClientRect().top + scrollY - barH() - 16;
     window.scrollTo({ top, behavior: reduced ? "auto" : "smooth" });
   }
@@ -205,6 +228,7 @@
     goGroup(next);
   }, { passive: false });
   window.addEventListener("scroll", onPinScroll, { passive: true });
+  groupsWrap.addEventListener("scroll", () => { if (isM()) onPinScroll(); }, { passive: true });
   window.addEventListener("resize", onPinScroll);
   onPinScroll();
 
@@ -290,6 +314,11 @@
     if (!it) return;
     if (it.kind === "project") { openProject(PROJECTS.findIndex(p => p.id === ref)); return; }
     const k = GROUPS.findIndex(g => g[0] === it.type);
+    if (isM()) {
+      setTab("parcours");
+      requestAnimationFrame(() => { groupsWrap.scrollLeft = k * groupsWrap.clientWidth; setGroup(k); openTlSheet(it); });
+      return;
+    }
     const el = document.getElementById("tl-" + ref);
     if (el.querySelector(".tl__more")) setOpen(el, true);
     if (pinMQ.matches) {
@@ -427,6 +456,7 @@
   function renderProject(p) {
     const i = PROJECTS.indexOf(p);
     $("#browserUrl").textContent = `matheo-gros.dev/projets/${p.slug}`;
+    $("#browserUrlM").textContent = `matheo-gros.dev/projets/${p.slug}`;
     browser.dataset.color = p.color;
     const prog = $("#browserProgress");
     prog.classList.remove("is-loading"); void prog.offsetWidth; prog.classList.add("is-loading");
@@ -435,6 +465,7 @@
       <nav class="pp-nav">
         <span class="pp-nav__brand"><span class="glyph" aria-hidden="true"><i class="c"></i><i class="s"></i><i class="t"></i></span>matheo-gros.dev</span>
         <span class="pp-nav__links"><a href="#pp-probleme">Problème</a><a href="#pp-approche">Approche</a><a href="#pp-livrables">Livrables</a></span>
+        <button class="pp-done" data-done>Terminé</button>
       </nav>
       <header class="pp-hero">
         <div class="pp-hero__art">${art(p)}</div>
@@ -446,6 +477,7 @@
           ${p.year ? `<div><span class="pp-meta__k">Période</span>${esc(p.year)}</div>` : ""}
         </div>
       </header>
+      <nav class="pp-chips" aria-label="Sections du projet"><a href="#pp-probleme" class="on">Problème</a><a href="#pp-approche">Approche</a><a href="#pp-livrables">Livrables</a><a href="#pp-interet">Intérêt</a></nav>
       <div class="pp-body">
         <div>
           <section id="pp-probleme"><h2><span class="n">01</span>Le problème</h2><p>${esc(p.problem)}</p></section>
@@ -453,7 +485,7 @@
             <ol class="steps" style="--n:${p.pipeline.length}">${p.pipeline.map((s, k) => `<li style="--k:${k}"><span class="steps__dot">${k + 1}</span><span class="steps__label">${esc(s)}</span></li>`).join("")}</ol>
           </section>
           <section id="pp-livrables"><h2><span class="n">03</span>Ce que j'ai livré</h2><ul>${p.delivered.map(d => `<li>${esc(d)}</li>`).join("")}</ul></section>
-          <section><h2><span class="n">04</span>Intérêt stratégique du projet</h2><p class="pp-quote">${esc(p.strategy)}</p>${p.note ? `<p class="pp-note">${esc(p.note)}</p>` : ""}</section>
+          <section id="pp-interet"><h2><span class="n">04</span>Intérêt stratégique du projet</h2><p class="pp-quote">${esc(p.strategy)}</p>${p.note ? `<p class="pp-note">${esc(p.note)}</p>` : ""}</section>
         </div>
         <aside class="pp-side">
           <div class="pp-card pp-card--keys"><h3>Mots-clés du projet</h3><div class="chips">${SKILLS.filter(s => s.refs.includes(p.id)).map(s => `<span class="chip"><span class="sw sw--${catById[s.cat].color}"></span>${esc(s.name)}</span>`).join("")}</div></div>
@@ -467,7 +499,26 @@
     page.scrollTop = 0;
     $$("[data-go]", page).forEach(b => b.addEventListener("click", () => { openIdx = +b.dataset.go; go(openIdx); renderProject(PROJECTS[openIdx]); }));
     $$(".pp-nav__links a", page).forEach(a => a.addEventListener("click", e => { e.preventDefault(); page.querySelector(a.getAttribute("href")).scrollIntoView({ behavior: "smooth" }); }));
+    $("[data-done]", page).addEventListener("click", () => closeBrowser());
+    $$(".pp-chips a", page).forEach(a => a.addEventListener("click", e => {
+      e.preventDefault();
+      const t = page.querySelector(a.getAttribute("href"));
+      page.scrollTo({ top: page.scrollTop + t.getBoundingClientRect().top - page.getBoundingClientRect().top - 112, behavior: reduced ? "auto" : "smooth" });
+    }));
   }
+  // mobile : la pastille de la section visible s'allume pendant la lecture
+  page.addEventListener("scroll", () => {
+    const chips = $$(".pp-chips a", page);
+    if (!chips.length || !isM()) return;
+    const top = page.getBoundingClientRect().top;
+    let on = 0;
+    chips.forEach((a, k) => { const s = page.querySelector(a.getAttribute("href")); if (s && s.getBoundingClientRect().top - top < 140) on = k; });
+    chips.forEach((a, k) => a.classList.toggle("on", k === on));
+  }, { passive: true });
+  function stepProject(d) { openIdx = (openIdx + d + n) % n; go(openIdx); renderProject(PROJECTS[openIdx]); }
+  $("#bPrev").addEventListener("click", () => stepProject(-1));
+  $("#bNext").addEventListener("click", () => stepProject(1));
+  $("#bList").addEventListener("click", () => closeBrowser());
   function closeBrowser(mode = "is-closing") {
     if (overlay.hidden) return;
     overlay.classList.add(mode);
@@ -489,10 +540,10 @@
   const spot = $("#spotlight"), spotIn = $("#spotlightInput"), spotRes = $("#spotlightResults");
   let results = [], sel = 0;
   const index = [
-    ...sections.map(id => ({ group: "Sections", label: { accueil: "Accueil", parcours: "Parcours", competences: "Compétences", projets: "Projets", contact: "Contact" }[id], sub: "#" + id, color: "blue", ico: "#", act: () => document.getElementById(id).scrollIntoView({ behavior: "smooth" }) })),
+    ...sections.map(id => ({ group: "Sections", label: { accueil: "Accueil", parcours: "Parcours", competences: "Compétences", projets: "Projets", contact: "Contact" }[id], sub: "#" + id, color: "blue", ico: "#", act: () => goSection(id) })),
     ...PROJECTS.map((p, i) => ({ group: "Projets", label: p.title, sub: p.kicker, color: p.color, ico: "▸", kw: p.stack.join(" ") + " " + p.summary, act: () => { go(i); openProject(i); } })),
     ...TIMELINE.map(x => ({ group: "Parcours", label: x.title, sub: orgShort(x), color: x.color, ico: x.mono, kw: x.tags.join(" ") + " " + x.lead, act: () => openRef(x.id) })),
-    ...SKILLS.map((s, i) => ({ group: "Compétences", label: s.name, sub: catById[s.cat].label, color: catById[s.cat].color, ico: "◆", kw: s.how, act: () => { document.getElementById("competences").scrollIntoView({ behavior: "smooth" }); toggleCol(colEls[SKILL_CATS.findIndex(c => c.id === s.cat)], true); if (activeSkill !== i) selectSkill(i); } })),
+    ...SKILLS.map((s, i) => ({ group: "Compétences", label: s.name, sub: catById[s.cat].label, color: catById[s.cat].color, ico: "◆", kw: s.how, act: () => { if (isM()) { setTab("competences"); openSkillSheet(i); return; } document.getElementById("competences").scrollIntoView({ behavior: "smooth" }); toggleCol(colEls[SKILL_CATS.findIndex(c => c.id === s.cat)], true); if (activeSkill !== i) selectSkill(i); } })),
     { group: "Actions", label: "Télécharger le CV", sub: "PDF", color: "red", ico: "↓", act: () => window.open("assets/Matheo_Gros_CV.pdf", "_blank") },
     { group: "Actions", label: "Envoyer un e-mail", sub: "matheo.gros@outlook.fr", color: "blue", ico: "@", act: () => (location.href = "mailto:matheo.gros@outlook.fr") }
   ];
@@ -536,8 +587,14 @@
   });
   document.addEventListener("keydown", e => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); spot.hidden ? openSpot() : closeSpot(); }
-    if (e.key === "Escape") { if (!spot.hidden) closeSpot(); else closeBrowser(); }
+    if (e.key === "Escape") {
+      if (!spot.hidden) closeSpot();
+      else if (!sheet.hidden) closeSheet();
+      else if (!fold.hidden) closeFolder();
+      else closeBrowser();
+    }
   });
+  $("#spotCancel").addEventListener("click", closeSpot);
 
   /* ---------- Dock : grossissement façon macOS ---------- */
   const dock = $("#dock");
@@ -557,4 +614,184 @@
   // le Dock s'efface sur le hero, apparaît ensuite
   const heroObs = new IntersectionObserver(([e]) => dock.classList.toggle("is-hidden", e.intersectionRatio > .6), { threshold: [0, .6, 1] });
   heroObs.observe($("#accueil"));
+
+  /* =========================================================
+     MOBILE : une app plutôt qu'un site rétréci
+     ========================================================= */
+
+  /* ---------- Onglets : une section par écran ---------- */
+  const tabLinks = $$("#tabbar a");
+  function setTab(id, { url = true, scroll = true } = {}) {
+    if (!sections.includes(id)) id = "accueil";
+    document.body.dataset.tab = id;
+    tabLinks.forEach(a => {
+      const on = a.dataset.tab === id;
+      a.classList.toggle("is-on", on);
+      on ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current");
+    });
+    if (url) history.replaceState(null, "", id === "accueil" ? location.pathname + location.search : "#" + id);
+    if (scroll) window.scrollTo(0, 0);
+    if (id === "parcours") requestAnimationFrame(onPinScroll);
+  }
+  function goSection(id) {
+    if (isM()) setTab(id);
+    else document.getElementById(id).scrollIntoView({ behavior: "smooth" });
+  }
+  document.addEventListener("click", e => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a || !isM()) return;
+    const id = a.getAttribute("href").slice(1);
+    if (!sections.includes(id)) return;
+    e.preventDefault();
+    setTab(id);
+  });
+  tabLinks.forEach(a => a.addEventListener("click", () => {
+    const ico = $(".app", a);
+    ico.classList.remove("bounce"); void ico.offsetWidth; ico.classList.add("bounce");
+  }));
+
+  /* ---------- Accueil : texte replié ---------- */
+  const heroText = $(".hero__text"), heroMore = $("#heroMore");
+  heroMore.addEventListener("click", () => {
+    const open = heroText.classList.toggle("is-open");
+    heroMore.textContent = open ? "Réduire" : "Lire la suite";
+    heroMore.setAttribute("aria-expanded", open);
+  });
+
+  /* ---------- Feuille qui monte du bas ---------- */
+  const sheet = $("#sheet"), sheetPanel = $("#sheetPanel"), sheetBody = $("#sheetBody");
+  let sheetTimer = 0;
+  function lockScroll() { document.body.style.overflow = "hidden"; }
+  function unlockScroll() { if (sheet.hidden && fold.hidden && overlay.hidden) document.body.style.overflow = ""; }
+  function openSheet(html, color) {
+    clearTimeout(sheetTimer);
+    sheetBody.innerHTML = html;
+    sheetPanel.dataset.color = color || "blue";
+    sheetPanel.style.transform = "";
+    sheetPanel.scrollTop = 0;
+    sheet.hidden = false;
+    lockScroll();
+    requestAnimationFrame(() => requestAnimationFrame(() => sheet.classList.add("is-open")));
+  }
+  function closeSheet() {
+    if (sheet.hidden) return;
+    sheet.classList.remove("is-open");
+    sheetPanel.style.transform = "";
+    sheetTimer = setTimeout(() => { sheet.hidden = true; unlockScroll(); }, reduced ? 0 : 320);
+  }
+  sheet.addEventListener("click", e => { if (e.target.closest("[data-close]")) closeSheet(); });
+  // glisser vers le bas pour fermer
+  let dragY = null, dragDy = 0;
+  sheetPanel.addEventListener("touchstart", e => { dragY = sheetPanel.scrollTop <= 0 ? e.touches[0].clientY : null; dragDy = 0; }, { passive: true });
+  sheetPanel.addEventListener("touchmove", e => {
+    if (dragY === null) return;
+    dragDy = Math.max(0, e.touches[0].clientY - dragY);
+    if (dragDy > 0) { sheetPanel.style.transition = "none"; sheetPanel.style.transform = `translateY(${dragDy}px)`; }
+  }, { passive: true });
+  sheetPanel.addEventListener("touchend", () => {
+    if (dragY === null) return;
+    sheetPanel.style.transition = "";
+    dragDy > 90 ? closeSheet() : (sheetPanel.style.transform = "");
+    dragY = null;
+  });
+
+  /* ---------- Parcours : fiche détaillée ---------- */
+  function openTlSheet(x) {
+    const linked = PROJECTS.map((p, i) => [p, i]).filter(([p]) => p.org === x.id);
+    openSheet(`
+      <div class="sh-head">${logoTile(x, "sh-logo")}<div><h2>${esc(x.title)}</h2><p>${esc(x.org)}, ${esc(x.place)}</p></div></div>
+      <div class="sh-chips"><span class="sh-date">${esc(x.date)}</span><span class="sh-type">${typeLabel[x.type]}</span></div>
+      <p class="sh-lead">${esc(x.lead)}</p>
+      ${x.bullets.length ? `<h3 class="sh-label">Ce que j'ai fait</h3><ul class="sh-list">${x.bullets.map(b => `<li>${esc(b)}</li>`).join("")}</ul>` : ""}
+      ${x.tags.length ? `<div class="sh-tags">${x.tags.map(t => `<span class="chip">${esc(t)}</span>`).join("")}</div>` : ""}
+      ${linked.length ? `<h3 class="sh-label">Projet${linked.length > 1 ? "s" : ""} lié${linked.length > 1 ? "s" : ""}</h3>${linked.map(([p, i]) => `
+        <button class="sh-link" data-proj="${i}" data-color="${p.color}"><span class="sh-link__ico">${art(p)}</span><span><small>Projet</small><b>${esc(p.title)}</b></span>
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>`).join("")}` : ""}`, x.color);
+    $$("[data-proj]", sheetBody).forEach(b => b.addEventListener("click", () => { closeSheet(); openProject(+b.dataset.proj); }));
+  }
+
+  /* ---------- Compétences : dossiers façon iPhone ---------- */
+  const mSkills = $("#mSkills");
+  const skillsOf = cat => SKILLS.map((s, i) => [s, i]).filter(([s]) => s.cat === cat);
+  const topSkills = SKILLS.map((s, i) => [s, i]).sort((a, b) => b[0].refs.length - a[0].refs.length).slice(0, 6);
+  mSkills.innerHTML = `
+    <div class="folders">${SKILL_CATS.map(c => {
+      const list = skillsOf(c.id);
+      const peek = list.slice(0, 3).map(([s]) => s.name).join(", ") + (list.length > 3 ? `, +${list.length - 3}` : "");
+      return `<button class="folder" data-cat="${c.id}" data-color="${c.color}">
+        <span class="folder__icon app--${c.color}"><i></i></span>
+        <b>${esc(c.label)}</b><small>${list.length} compétences</small>
+        <span class="folder__peek">${esc(peek)}</span></button>`;
+    }).join("")}</div>
+    <h3 class="m-sub">Les plus utilisées</h3>
+    <div class="topskills">${topSkills.map(([s, i]) => `<button class="topskill" data-skill="${i}" data-color="${catById[s.cat].color}"><span class="skill__shape skill__shape--${s.cat}"></span>${esc(s.name)}<span class="n">${s.refs.length}</span></button>`).join("")}</div>
+    <p class="m-note">Le chiffre indique le nombre d'expériences et de projets où la compétence a servi.</p>`;
+  const fold = $("#fold"), foldPanel = $("#foldPanel");
+  function openFolder(catId) {
+    const c = catById[catId];
+    $("#foldTitle").textContent = c.label;
+    foldPanel.innerHTML = skillsOf(catId).map(([s, i]) =>
+      `<button class="sk" data-skill="${i}" data-color="${c.color}"><span class="skill__shape skill__shape--${s.cat}"></span><span>${esc(s.name)}</span><span class="skill__count">${s.refs.length}</span></button>`).join("");
+    fold.hidden = false;
+    lockScroll();
+  }
+  function closeFolder() { fold.hidden = true; unlockScroll(); }
+  fold.addEventListener("click", e => { if (e.target.closest("[data-fclose]")) closeFolder(); });
+  $$(".folder", mSkills).forEach(b => b.addEventListener("click", () => openFolder(b.dataset.cat)));
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-skill]");
+    if (!b || !(fold.contains(b) || mSkills.contains(b))) return;
+    $$("[data-skill]", foldPanel).forEach(x => x.classList.toggle("is-active", x === b));
+    openSkillSheet(+b.dataset.skill);
+  });
+  function openSkillSheet(i) {
+    const s = SKILLS[i], cat = catById[s.cat];
+    openSheet(`
+      <p class="sh-cat"><span class="sw sw--${cat.color}"></span>${esc(cat.label)}</p>
+      <h2 class="sh-title">${esc(s.name)}</h2>
+      <p class="sh-lead">${esc(s.how)}</p>
+      <h3 class="sh-label">${s.refs.length} preuve${s.refs.length > 1 ? "s" : ""}</h3>
+      <ul class="evidence">${s.refs.map(r => {
+        const it = byId[r]; if (!it) return "";
+        const isP = it.kind === "project";
+        const label = isP ? it.title : `${orgShort(it)}, ${it.title}`;
+        const sub = isP ? `Projet, ${it.kicker}` : `${typeLabel[it.type]}, ${it.date}`;
+        return `<li><a href="#" data-ref="${r}" data-color="${it.color}">${logoTile(isP ? orgById[it.org] : it, "evidence__ico")}<span><b>${esc(label)}</b><small>${esc(sub)}</small></span></a></li>`;
+      }).join("")}</ul>`, cat.color);
+    $$("a[data-ref]", sheetBody).forEach(a => a.addEventListener("click", e => {
+      e.preventDefault();
+      const ref = a.dataset.ref;
+      closeSheet(); closeFolder();
+      setTimeout(() => openRef(ref), 60);
+    }));
+  }
+
+  /* ---------- Projets : bande à faire défiler + liste ---------- */
+  const mProj = $("#mProj");
+  const SHAPES = ["circle", "square", "triangle"];
+  mProj.innerHTML = `
+    <div class="pstrip" id="pstrip">${PROJECTS.map((p, i) => `
+      <button class="mcard" data-open="${i}" data-color="${p.color}">
+        <span class="mcard__art">${art(p)}${logoTile(orgById[p.org], "pcard__logo")}<span class="mcard__open">Ouvrir <svg viewBox="0 0 24 24" width="11" height="11" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></span></span>
+        <span class="mcard__body"><b class="mcard__title">${esc(p.title)}</b><span class="mcard__sum">${esc(p.summary)}</span>
+        <span class="mcard__tags">${p.stack.slice(0, 3).map(t => `<span class="chip">${esc(t)}</span>`).join("")}</span></span>
+      </button>`).join("")}</div>
+    <div class="pdots pdots--c" id="pDots" aria-hidden="true">${PROJECTS.map((_, i) => `<i class="${i ? "" : "on"}"></i>`).join("")}</div>
+    <div class="m-head"><h3 class="m-sub">Tous les projets</h3><span class="mono">${PROJECTS.length}</span></div>
+    <ul class="plist">${PROJECTS.map((p, i) => `
+      <li><button class="prow" data-open="${i}" data-color="${p.color}">
+        <span class="prow__ico"><i class="${SHAPES[i % 3]}"></i></span>
+        <span class="prow__txt"><b>${esc(p.title)}</b><small>${esc(p.kicker)}</small></span>
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button></li>`).join("")}</ul>`;
+  $$("[data-open]", mProj).forEach(b => b.addEventListener("click", () => { openIdx = +b.dataset.open; go(openIdx); openProject(openIdx); }));
+  const pstrip = $("#pstrip");
+  pstrip.addEventListener("scroll", () => {
+    const card = pstrip.firstElementChild;
+    const k = Math.round(pstrip.scrollLeft / (card.offsetWidth + 12));
+    $$("#pDots i").forEach((d, j) => d.classList.toggle("on", j === Math.min(k, n - 1)));
+  }, { passive: true });
+
+  // état initial : l'onglet vient de l'adresse (#projets…)
+  setTab(location.hash.slice(1) || "accueil", { url: false, scroll: false });
 })();

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=9" />
+  <link rel="stylesheet" href="css/style.css?v=12" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='9' cy='9' r='6' fill='%234285f4'/%3E%3Crect x='17' y='3' width='12' height='12' rx='2' fill='%23ea4335'/%3E%3Cpath d='M9 18l6.5 11h-13z' fill='%23fbbc04'/%3E%3Crect x='17' y='17' width='12' height='12' rx='6' fill='%2334a853'/%3E%3C/svg%3E" />
 </head>
 <body>
@@ -69,13 +69,14 @@
             maintenance prédictive (<b>Savencia</b>), et assistants LLM/RAG déployés pour des équipes métier. Je contribue à des projets 
             transverses associant technologie, stratégie et développement business.
           </p>
+          <button class="hero__more" id="heroMore" aria-expanded="false">Lire la suite</button>
 
 
           <div class="hero__cta reveal">
             <a href="#projets" class="btn btn--primary">Voir mes projets
               <svg viewBox="0 0 24 24" width="16" height="16"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
-            <a href="assets/Matheo_Gros_CV.pdf" class="btn btn--ghost" target="_blank" rel="noopener">Télécharger le CV</a>
+            <a href="assets/Matheo_Gros_CV.pdf" class="btn btn--ghost" target="_blank" rel="noopener"><span class="hide-m">Télécharger le </span>CV</a>
             <a href="https://www.linkedin.com/in/matheo-gros" class="btn btn--icon" target="_blank" rel="noopener" aria-label="LinkedIn">
               <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46zM5.34 7.43a2.06 2.06 0 110-4.13 2.06 2.06 0 010 4.13zM7.12 20.45H3.56V9h3.56zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>
             </a>
@@ -124,6 +125,7 @@
                 <button data-group="1"><span class="sw sw--green"></span>Formation</button>
                 <button data-group="2"><span class="sw sw--yellow"></span>Engagements</button>
               </div>
+              <div class="tl-dots" id="tlDots"><span class="pdots" aria-hidden="true"><i class="on"></i><i></i><i></i></span><span>Glissez pour changer de partie</span></div>
             </div>
             <div class="parcours__groups" id="timelineGroups"></div>
           </div>
@@ -149,6 +151,7 @@
             <div class="inspector__body" id="inspectorBody"></div>
           </aside>
         </div>
+        <div class="m-skills" id="mSkills"></div>
       </div>
     </section>
 
@@ -173,6 +176,7 @@
           <svg viewBox="0 0 24 24" width="20" height="20"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
       </div>
+      <div class="container m-proj" id="mProj"></div>
     </section>
 
     <!-- ============ CONTACT ============ -->
@@ -189,6 +193,23 @@
             <a class="btn btn--ghost" href="assets/Matheo_Gros_CV.pdf" target="_blank" rel="noopener">CV (PDF)</a>
           </div>
         </div>
+        <div class="contact__list">
+          <a class="crow" href="mailto:matheo.gros@outlook.fr">
+            <span class="crow__ico app--mail"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6" width="17" height="12" rx="2" fill="none" stroke="#fff" stroke-width="2"/><path d="M4 7l8 6 8-6" fill="none" stroke="#fff" stroke-width="2"/></svg></span>
+            <span><b>E-mail</b><small>matheo.gros@outlook.fr</small></span>
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="crow" href="https://www.linkedin.com/in/matheo-gros" target="_blank" rel="noopener">
+            <span class="crow__ico app--linkedin"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 9.5v9M6.5 5.5v.5M11 18.5v-5a3 3 0 016 0v5M11 9.5v9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg></span>
+            <span><b>LinkedIn</b><small>in/matheo-gros</small></span>
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </a>
+          <a class="crow" href="assets/Matheo_Gros_CV.pdf" target="_blank" rel="noopener">
+            <span class="crow__ico app--doc"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7z" fill="#fff"/><path d="M14 3v4h4" fill="#dadce0"/><rect x="9" y="11" width="7" height="1.6" rx=".8" fill="#ea4335"/><rect x="9" y="14" width="7" height="1.6" rx=".8" fill="#9aa0a6"/><rect x="9" y="17" width="5" height="1.6" rx=".8" fill="#9aa0a6"/></svg></span>
+            <span><b>CV en PDF</b><small>Télécharger</small></span>
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 4v11M8 11l4 4 4-4M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        </div>
       </div>
     </section>
   </main>
@@ -199,6 +220,35 @@
       <span>fait avec le ❤️</span>
     </div>
   </footer>
+
+  <!-- ============ BARRE D'ONGLETS (mobile) ============ -->
+  <nav class="tabbar" id="tabbar" aria-label="Navigation">
+    <a href="#accueil" data-tab="accueil"><span class="app app--blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6 8 6v8a1 1 0 01-1 1h-4v-5H9v5H5a1 1 0 01-1-1z"/></svg></span>Accueil</a>
+    <a href="#parcours" data-tab="parcours"><span class="app app--green"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h3v14H5zM10.5 9h3v10h-3zM16 12h3v7h-3z"/></svg></span>Parcours</a>
+    <a href="#competences" data-tab="competences"><span class="app app--yellow"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="8" r="3"/><rect x="13" y="5" width="6" height="6" rx="1"/><path d="M8 13l3.5 6h-7z"/><circle cx="16" cy="16" r="3"/></svg></span>Compétences</a>
+    <a href="#projets" data-tab="projets"><span class="app app--red"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2z"/></svg></span>Projets</a>
+    <a href="#contact" data-tab="contact"><span class="app app--mail"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V7a1 1 0 011-1zm1 2.2V16h14V8.2l-7 5z"/></svg></span>Contact</a>
+  </nav>
+
+  <!-- ============ FEUILLE DU BAS (mobile) ============ -->
+  <div class="sheet" id="sheet" hidden>
+    <div class="sheet__scrim" data-close></div>
+    <section class="sheet__panel" id="sheetPanel" role="dialog" aria-modal="true" aria-label="Détails">
+      <div class="sheet__grab" aria-hidden="true"></div>
+      <button class="sheet__close" data-close aria-label="Fermer"><span><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></span></button>
+      <div id="sheetBody"></div>
+    </section>
+  </div>
+
+  <!-- ============ DOSSIER DE COMPÉTENCES (mobile) ============ -->
+  <div class="fold" id="fold" hidden>
+    <div class="fold__scrim" data-fclose></div>
+    <div class="fold__head">
+      <h2 id="foldTitle"></h2>
+      <button class="fold__close" data-fclose aria-label="Fermer le dossier"><span><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></span></button>
+    </div>
+    <div class="fold__panel" id="foldPanel" role="dialog" aria-modal="true" aria-labelledby="foldTitle"></div>
+  </div>
 
   <!-- ============ DOCK ============ -->
   <nav class="dock" id="dock" aria-label="Dock">
@@ -233,6 +283,15 @@
       </div>
       <div class="browser__progress" id="browserProgress"></div>
       <div class="browser__page" id="browserPage"></div>
+      <div class="browser__mbar">
+        <div class="browser__murl"><svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" fill="currentColor"/><path d="M8 11V8a4 4 0 018 0v3" fill="none" stroke="currentColor" stroke-width="2"/></svg><span id="browserUrlM">matheo-gros.dev</span></div>
+        <div class="browser__mbtns">
+          <button id="bPrev" aria-label="Projet précédent"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button id="bNext" aria-label="Projet suivant"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <a href="assets/Matheo_Gros_CV.pdf" target="_blank" rel="noopener" aria-label="CV en PDF"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M7 3h7l4 4v14H7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10 12h5M10 16h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></a>
+          <button id="bList" aria-label="Fermer et revenir aux projets"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="4" y="4" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 20h9a2 2 0 002-2V9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -240,16 +299,19 @@
   <div class="spotlight" id="spotlight" hidden>
     <div class="spotlight__box" role="dialog" aria-modal="true" aria-label="Recherche">
       <div class="spotlight__input">
-        <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <input id="spotlightInput" type="text" placeholder="Rechercher un projet, une compétence, une expérience…" autocomplete="off" spellcheck="false" />
+        <label class="spotlight__field">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="spotlightInput" type="search" placeholder="Rechercher un projet, une compétence, une expérience…" aria-label="Rechercher" autocomplete="off" spellcheck="false" />
+        </label>
         <kbd>esc</kbd>
+        <button class="spotlight__cancel" id="spotCancel">Annuler</button>
       </div>
       <ul class="spotlight__results" id="spotlightResults"></ul>
     </div>
   </div>
 
-  <script src="js/data.js?v=9"></script>
-  <script src="js/scenes.js?v=9"></script>
-  <script src="js/app.js?v=9"></script>
+  <script src="js/data.js?v=12"></script>
+  <script src="js/scenes.js?v=12"></script>
+  <script src="js/app.js?v=12"></script>
 </body>
 </html>
